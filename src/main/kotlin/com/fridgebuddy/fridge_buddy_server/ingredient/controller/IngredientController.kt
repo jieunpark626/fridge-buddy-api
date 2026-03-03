@@ -1,6 +1,7 @@
 package com.fridgebuddy.fridge_buddy_server.ingredient.controller
 
 import com.fridgebuddy.fridge_buddy_server.common.response.ApiResponse
+import com.fridgebuddy.fridge_buddy_server.ingredient.dto.IngredientDetailResponse
 import com.fridgebuddy.fridge_buddy_server.ingredient.dto.IngredientResponse
 import com.fridgebuddy.fridge_buddy_server.ingredient.service.IngredientService
 import org.springframework.web.bind.annotation.*
@@ -16,6 +17,6 @@ class IngredientController(
         ApiResponse.ok(ingredientService.search(name))
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): ApiResponse<IngredientResponse> =
+    fun getById(@PathVariable id: Long): ApiResponse<IngredientDetailResponse> =
         ApiResponse.ok(ingredientService.getById(id))
 }

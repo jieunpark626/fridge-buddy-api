@@ -1,13 +1,7 @@
 package com.fridgebuddy.fridge_buddy_server.ingredient.domain
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "ingredients")
@@ -17,23 +11,29 @@ class Ingredient(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     val name: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val category: CategoryType,
 
+    @Column(length = 255)
+    val imageUrl: String? = null,
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val storageType: StorageType,
+    val defaultStorageType: StorageType,
+
+    @Column(nullable = false, length = 50)
+    val shelfLifeText: String,
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    val storageMethod: String,
 
     @Column(columnDefinition = "TEXT")
-    val storageTip: String? = null,
+    val extraInfo: String? = null,
 
-    @Column(columnDefinition = "TEXT")
-    val storageDescription: String? = null,
-
-    @Column(nullable = false)
-    val defaultExpirationDays: Int,
+    @Column(nullable = false, updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 )
