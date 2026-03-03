@@ -11,28 +11,37 @@ class Ingredient(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
+    // AI가 생성 후 정규명으로 덮어씀 → var
     @Column(nullable = false, unique = true, length = 50)
-    val name: String,
+    var name: String,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val category: CategoryType,
+    var category: CategoryType,
 
     @Column(length = 255)
     val imageUrl: String? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val defaultStorageType: StorageType,
+    var defaultStorageType: StorageType,
 
     @Column(nullable = false, length = 50)
-    val shelfLifeText: String,
+    var shelfLifeText: String,
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    val storageMethod: String,
+    var storageMethod: String,
 
     @Column(columnDefinition = "TEXT")
-    val extraInfo: String? = null,
+    var extraInfo: String? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    var status: IngredientStatus = IngredientStatus.COMPLETED,
+
+    // PENDING 시작 시각 (stuck 감지용)
+    @Column
+    var pendingSince: LocalDateTime? = null,
 
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
