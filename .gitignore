@@ -1,0 +1,67 @@
+HELP.md
+
+### Gradle ###
+.gradle/
+build/
+gradle-app.setting
+.gradletasknamecache
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Kotlin ###
+.kotlin/
+
+### macOS ###
+.DS_Store
+**/.DS_Store
+__MACOSX/
+
+### 환경변수 / 시크릿 ###
+.env
+.env.*
+!.env.example
+application-local.yaml
+application-local.yml
+application-secret.yaml
+application-secret.yml
+
+### 로그 ###
+*.log
+logs/
+
+### 테스트 커버리지 ###
+coverage/
+
+docs/
