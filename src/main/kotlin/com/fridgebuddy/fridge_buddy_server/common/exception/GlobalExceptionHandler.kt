@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler(InvalidIngredientException::class)
+    fun handleInvalidIngredient(e: InvalidIngredientException) =
+        ApiResponse.error(e.message ?: "식재료로 적합하지 않습니다.")
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNotFound(e: NoSuchElementException) =

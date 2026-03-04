@@ -54,10 +54,13 @@ class IngredientService(
             // 3. double-check (락 대기 중 다른 스레드가 이미 저장했을 수 있음)
             ingredientRepository.findByKeyword(keyword)?.let { return resolveStatus(it) }
 
-            // 4. PENDING 선점 저장 (별도 트랜잭션으로 즉시 커밋)
+            // 4. 식재료 유효성 검증 (동기, InvalidIngredientException 시 422 반환)
+            ingredientAiService.validate(keyword)
+
+            // 5. PENDING 선점 저장 (별도 트랜잭션으로 즉시 커밋)
             val pending = ingredientAiSaver.savePending(keyword)
 
-            // 5. AI 비동기 호출 (PENDING 커밋 이후)
+            // 6. AI 비동기 호출 (PENDING 커밋 이후)
             ingredientAiService.generateAndSave(pending.id, keyword)
 
             return IngredientStatusResponse.pending(pending.id)
