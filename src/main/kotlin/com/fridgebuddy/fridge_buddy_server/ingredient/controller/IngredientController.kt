@@ -16,9 +16,9 @@ class IngredientController(
     private val ingredientService: IngredientService,
 ) {
 
-    /** 부분 일치 검색 (COMPLETED 재료만) */
+    /** 전체 조회 또는 부분 일치 검색 (COMPLETED 재료만) */
     @GetMapping
-    fun search(@RequestParam name: String): ApiResponse<List<IngredientResponse>> =
+    fun search(@RequestParam(required = false) name: String?): ApiResponse<List<IngredientResponse>> =
         ApiResponse.ok(ingredientService.search(name))
 
     /**

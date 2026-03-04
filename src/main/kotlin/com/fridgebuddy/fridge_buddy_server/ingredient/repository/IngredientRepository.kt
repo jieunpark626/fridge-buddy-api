@@ -10,7 +10,19 @@ import java.time.LocalDateTime
 
 interface IngredientRepository : JpaRepository<Ingredient, Long> {
 
-    fun findByNameContainingIgnoreCase(name: String): List<Ingredient>
+    fun findByStatus(status: IngredientStatus): List<Ingredient>
+
+    @Query("""
+        SELECT DISTINCT i FROM Ingredient i
+        LEFT JOIN IngredientAlias a ON a.ingredient = i
+        WHERE (upper(i.name) LIKE upper(concat('%', :name, '%'))
+            OR upper(a.alias) LIKE upper(concat('%', :name, '%')))
+          AND i.status = :status
+    """)
+    fun findByNameOrAliasContainingIgnoreCaseAndStatus(
+        @Param("name") name: String,
+        @Param("status") status: IngredientStatus,
+    ): List<Ingredient>
 
     // alias OR name 동시 조회 (단건)
     @Query("""

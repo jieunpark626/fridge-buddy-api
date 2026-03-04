@@ -25,11 +25,13 @@ class IngredientService(
     // keyword 단위 JVM 락: 동일 키워드 동시 요청 시 AI 중복 호출 방지
     private val keywordLocks = ConcurrentHashMap<String, ReentrantLock>()
 
-    /** 부분 일치 검색 (기존 COMPLETED 재료만 반환) */
-    fun search(name: String): List<IngredientResponse> {
-        require(name.isNotBlank()) { "검색어를 입력해주세요." }
-        return ingredientRepository.findByNameContainingIgnoreCase(name)
-            .filter { it.status == IngredientStatus.COMPLETED }
+    /** 전체 조회 또는 부분 일치 검색 (alias 포함, COMPLETED 재료만 반환) */
+    fun search(name: String?): List<IngredientResponse> {
+        if (name.isNullOrBlank()) {
+            return ingredientRepository.findByStatus(IngredientStatus.COMPLETED)
+                .map { IngredientResponse.from(it) }
+        }
+        return ingredientRepository.findByNameOrAliasContainingIgnoreCaseAndStatus(name, IngredientStatus.COMPLETED)
             .map { IngredientResponse.from(it) }
     }
 
