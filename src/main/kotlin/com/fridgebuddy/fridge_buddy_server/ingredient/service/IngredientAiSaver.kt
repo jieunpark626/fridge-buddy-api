@@ -47,6 +47,9 @@ class IngredientAiSaver(
         ingredient.category = aiData.category
         ingredient.defaultStorageType = aiData.defaultStorageType
         ingredient.shelfLifeText = aiData.shelfLifeText
+        ingredient.shelfLifeDaysFridge = aiData.shelfLifeDaysFridge
+        ingredient.shelfLifeDaysFreezer = aiData.shelfLifeDaysFreezer
+        ingredient.shelfLifeDaysRoomTemp = aiData.shelfLifeDaysRoomTemp
         ingredient.storageMethod = aiData.storageMethod
         ingredient.extraInfo = aiData.extraInfo
         ingredient.status = IngredientStatus.COMPLETED

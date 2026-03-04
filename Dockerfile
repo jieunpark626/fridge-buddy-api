@@ -1,12 +1,10 @@
 # Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM gradle:8.14.4-jdk21-alpine AS builder
 WORKDIR /app
-COPY gradlew .
-COPY gradle gradle
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
 COPY src src
-RUN chmod +x ./gradlew && ./gradlew bootJar -x test
+RUN gradle bootJar -x test --no-daemon
 
 # Stage 2: Run
 FROM eclipse-temurin:21-jre-alpine

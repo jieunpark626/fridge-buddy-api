@@ -37,6 +37,16 @@ class Ingredient(
     @Column(nullable = false, length = 50)
     var shelfLifeText: String,
 
+    // AUTO 유통기한 계산용 (보관 방법별 일수, AI 생성 시 함께 저장)
+    @Column
+    var shelfLifeDaysFridge: Int? = null,
+
+    @Column
+    var shelfLifeDaysFreezer: Int? = null,
+
+    @Column
+    var shelfLifeDaysRoomTemp: Int? = null,
+
     @Column(nullable = false, columnDefinition = "TEXT")
     var storageMethod: String,
 
