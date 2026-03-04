@@ -5,6 +5,7 @@ import com.fridgebuddy.fridge_buddy_server.ingredient.domain.StorageType
 
 data class IngredientAiDto(
     val name: String,
+    val icon: String,
     val category: CategoryType,
     val defaultStorageType: StorageType,
     val shelfLifeText: String,

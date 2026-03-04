@@ -43,6 +43,7 @@ class IngredientAiSaver(
 
         // 정규명 및 모든 필드 업데이트
         ingredient.name = aiData.name
+        ingredient.icon = aiData.icon
         ingredient.category = aiData.category
         ingredient.defaultStorageType = aiData.defaultStorageType
         ingredient.shelfLifeText = aiData.shelfLifeText
