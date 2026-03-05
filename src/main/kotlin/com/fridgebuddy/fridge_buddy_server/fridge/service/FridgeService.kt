@@ -28,22 +28,20 @@ class FridgeService(
     private val storageCautionRepository: StorageCautionRepository,
     private val userRepository: UserRepository,
 ) {
-    // MVP: 단일 사용자 고정. 토스 로그인 연동 시 인증 토큰에서 userId를 추출하도록 교체
-    private val MVP_USER_ID = 1L
 
     @Transactional
-    fun addItem(request: AddFridgeItemRequest): FridgeItemDetailResponse {
+    fun addItem(userId: Long, request: AddFridgeItemRequest): FridgeItemDetailResponse {
         val ingredient = ingredientRepository.findById(request.ingredientId)
             .orElseThrow { NoSuchElementException("식재료를 찾을 수 없습니다. id=${request.ingredientId}") }
 
-        if (fridgeItemRepository.existsByUserIdAndIngredientId(MVP_USER_ID, request.ingredientId)) {
+        if (fridgeItemRepository.existsByUserIdAndIngredientId(userId, request.ingredientId)) {
             throw DuplicateFridgeItemException("이미 냉장고에 등록된 재료입니다.")
         }
 
         require(request.quantity > java.math.BigDecimal.ZERO) { "수량은 0보다 커야 합니다." }
 
         val expiryDate = calculateExpiryDate(request, ingredient)
-        val user = userRepository.getReferenceById(MVP_USER_ID)
+        val user = userRepository.getReferenceById(userId)
 
         val saved = fridgeItemRepository.save(
             FridgeItem(
@@ -61,28 +59,28 @@ class FridgeService(
         return buildDetail(saved)
     }
 
-    fun getItems(): List<FridgeItemSummaryResponse> =
-        fridgeItemRepository.findByUserIdOrderByExpiryDateAsc(MVP_USER_ID)
+    fun getItems(userId: Long): List<FridgeItemSummaryResponse> =
+        fridgeItemRepository.findByUserIdOrderByExpiryDateAsc(userId)
             .map { FridgeItemSummaryResponse.from(it) }
 
-    fun getItem(id: Long): FridgeItemDetailResponse =
-        buildDetail(findItem(id))
+    fun getItem(userId: Long, id: Long): FridgeItemDetailResponse =
+        buildDetail(findItem(userId, id))
 
     @Transactional
-    fun updateQuantity(id: Long, request: UpdateQuantityRequest): FridgeItemSummaryResponse {
+    fun updateQuantity(userId: Long, id: Long, request: UpdateQuantityRequest): FridgeItemSummaryResponse {
         require(request.quantity >= java.math.BigDecimal.ZERO) { "수량은 0 이상이어야 합니다." }
-        val item = findItem(id)
+        val item = findItem(userId, id)
         item.quantity = request.quantity
         item.updatedAt = LocalDateTime.now()
         return FridgeItemSummaryResponse.from(item)
     }
 
     @Transactional
-    fun deleteItem(id: Long) = fridgeItemRepository.delete(findItem(id))
+    fun deleteItem(userId: Long, id: Long) = fridgeItemRepository.delete(findItem(userId, id))
 
-    private fun findItem(id: Long): FridgeItem =
-        fridgeItemRepository.findById(id)
-            .orElseThrow { NoSuchElementException("냉장고 재료를 찾을 수 없습니다. id=$id") }
+    private fun findItem(userId: Long, id: Long): FridgeItem =
+        fridgeItemRepository.findByIdAndUserId(id, userId)
+            ?: throw NoSuchElementException("냉장고 재료를 찾을 수 없습니다. id=$id")
 
     private fun calculateExpiryDate(request: AddFridgeItemRequest, ingredient: Ingredient): LocalDate =
         when (request.expiryInputType) {

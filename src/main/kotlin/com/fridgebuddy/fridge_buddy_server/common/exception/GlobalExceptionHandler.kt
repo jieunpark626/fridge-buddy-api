@@ -5,9 +5,22 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.HttpRequestMethodNotSupportedException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResource(e: NoResourceFoundException) =
+        ApiResponse.error("요청한 리소스를 찾을 수 없습니다.")
+
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotAllowed(e: HttpRequestMethodNotSupportedException) =
+        ApiResponse.error("지원하지 않는 HTTP 메서드입니다: ${e.method}")
+
 
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @ExceptionHandler(InvalidIngredientException::class)

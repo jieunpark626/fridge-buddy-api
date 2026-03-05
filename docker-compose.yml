@@ -28,6 +28,13 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      OAUTH2_REDIRECT_URI: ${OAUTH2_REDIRECT_URI:-http://localhost:3000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       postgres:
         condition: service_healthy

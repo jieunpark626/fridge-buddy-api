@@ -8,4 +8,6 @@ interface FridgeItemRepository : JpaRepository<FridgeItem, Long> {
     fun findByUserIdOrderByExpiryDateAsc(userId: Long): List<FridgeItem>
 
     fun existsByUserIdAndIngredientId(userId: Long, ingredientId: Long): Boolean
+
+    fun findByIdAndUserId(id: Long, userId: Long): FridgeItem?
 }

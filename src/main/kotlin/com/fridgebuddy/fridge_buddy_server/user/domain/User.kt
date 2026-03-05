@@ -1,21 +1,32 @@
 package com.fridgebuddy.fridge_buddy_server.user.domain
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.LocalDateTime
 
 @Entity
-@Table(name = "users")
+@Table(
+    name = "users",
+    uniqueConstraints = [UniqueConstraint(columnNames = ["provider", "provider_id"])]
+)
 class User(
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    val provider: SocialProvider,
+
+    @Column(name = "provider_id", nullable = false)
+    val providerId: String,
+
+    @Column(nullable = false)
+    var nickname: String,
+
+    @Column
+    var profileImage: String? = null,
+
+    @Column(nullable = false, updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
-
-    @Column(nullable = false, updatable = false)
-    val createdAt: LocalDateTime = LocalDateTime.now(),
 )
