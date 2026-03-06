@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16
     container_name: fridge-buddy-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
@@ -19,6 +20,7 @@ services:
   app:
     build: .
     container_name: fridge-buddy-app
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -28,8 +30,6 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       CLAUDE_API_KEY: ${CLAUDE_API_KEY}
-      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
-      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
