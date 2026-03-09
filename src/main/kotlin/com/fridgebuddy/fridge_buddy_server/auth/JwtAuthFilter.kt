@@ -2,6 +2,7 @@ package com.fridgebuddy.fridge_buddy_server.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fridgebuddy.fridge_buddy_server.common.response.ApiResponse
+import com.fridgebuddy.fridge_buddy_server.user.repository.UserRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -15,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val jwtProvider: JwtProvider,
+    private val userRepository: UserRepository,
     private val objectMapper: ObjectMapper,
 ) : OncePerRequestFilter() {
 
@@ -29,6 +31,10 @@ class JwtAuthFilter(
             when (jwtProvider.validate(token)) {
                 TokenStatus.VALID -> {
                     val userId = jwtProvider.getUserId(token)
+                    if (!userRepository.existsById(userId)) {
+                        writeUnauthorized(response, "존재하지 않는 사용자입니다. 다시 로그인해주세요.")
+                        return
+                    }
                     val auth = UsernamePasswordAuthenticationToken(
                         userId,
                         null,
@@ -50,8 +56,11 @@ class JwtAuthFilter(
         filterChain.doFilter(request, response)
     }
 
-    private fun resolveToken(request: HttpServletRequest): String? =
-        request.cookies?.find { it.name == "access_token" }?.value
+    private fun resolveToken(request: HttpServletRequest): String? {
+        val header = request.getHeader("Authorization") ?: return null
+        if (!header.startsWith("Bearer ")) return null
+        return header.removePrefix("Bearer ")
+    }
 
     private fun writeUnauthorized(response: HttpServletResponse, message: String) {
         response.status = HttpServletResponse.SC_UNAUTHORIZED

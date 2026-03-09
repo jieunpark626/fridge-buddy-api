@@ -17,12 +17,6 @@ class User(
     @Column(name = "provider_id", nullable = false)
     val providerId: String,
 
-    @Column(nullable = false)
-    var nickname: String,
-
-    @Column
-    var profileImage: String? = null,
-
     @Column(nullable = false, updatable = false)
     val createdAt: LocalDateTime = LocalDateTime.now(),
 

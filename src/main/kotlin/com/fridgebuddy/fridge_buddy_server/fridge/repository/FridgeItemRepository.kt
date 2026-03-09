@@ -10,4 +10,6 @@ interface FridgeItemRepository : JpaRepository<FridgeItem, Long> {
     fun existsByUserIdAndIngredientId(userId: Long, ingredientId: Long): Boolean
 
     fun findByIdAndUserId(id: Long, userId: Long): FridgeItem?
+
+    fun deleteByUserId(userId: Long)
 }
