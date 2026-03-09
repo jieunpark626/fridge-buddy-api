@@ -42,3 +42,6 @@ toss:
     # openssl pkcs8 -topk8 -nocrypt -in private.key -out private.pk8.pem
     cert-path: ${APPS_IN_TOSS_MTLS_CERT_PATH:}
     key-path: ${APPS_IN_TOSS_MTLS_KEY_PATH:}
+  unlink-callback:
+    # 토스 콘솔에 등록한 Basic Auth 헤더 값 (콜백 URL 인증용, 필수)
+    auth-header: ${TOSS_CALLBACK_AUTH_HEADER}
