@@ -1,6 +1,24 @@
+# Build artifacts
 build/
+bin/
+out/
 .gradle/
-.git/
+
+# IDE & Configs
 .idea/
-*.md
+.vscode/
+*.iml
 .env*
+*.swp
+
+# Version Control
+.git/
+.gitignore
+
+# Documentation
+*.md
+
+# Docker 관련 (이미 빌드 중이므로 포함할 필요 없음)
+Dockerfile
+docker-compose.yml
+.github/
