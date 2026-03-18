@@ -9,9 +9,8 @@ import com.fridgebuddy.fridge_buddy_server.ingredient.repository.IngredientPairi
 import com.fridgebuddy.fridge_buddy_server.ingredient.repository.IngredientRepository
 import com.fridgebuddy.fridge_buddy_server.ingredient.repository.StorageCautionRepository
 import com.fridgebuddy.fridge_buddy_server.ingredient.repository.StorageTipRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
 
 @Service
 class IngredientService(
@@ -22,8 +21,6 @@ class IngredientService(
     private val ingredientAiService: IngredientAiService,
     private val ingredientAiSaver: IngredientAiSaver,
 ) {
-    // keyword 단위 JVM 락: 동일 키워드 동시 요청 시 AI 중복 호출 방지
-    private val keywordLocks = ConcurrentHashMap<String, ReentrantLock>()
 
     /** 전체 조회 또는 부분 일치 검색 (alias 포함, COMPLETED 재료만 반환) */
     fun search(name: String?): List<IngredientResponse> {
@@ -36,36 +33,40 @@ class IngredientService(
     }
 
     /**
-     * 정확한 키워드로 조회. DB에 없으면 AI 생성을 비동기로 트리거.
+     * AI 재료 생성 요청. 이미 존재하면 즉시 반환, 없으면 AI 생성을 비동기로 트리거.
      * - COMPLETED → 200
      * - PENDING   → 202 (클라이언트 폴링 유도)
      * - FAILED    → PENDING 리셋 후 재시도 → 202
      */
-    fun lookup(keyword: String): IngredientStatusResponse {
+    fun generate(keyword: String): IngredientStatusResponse {
         require(keyword.isNotBlank()) { "검색어를 입력해주세요." }
 
-        // 1. alias OR name 조회
-        ingredientRepository.findByKeyword(keyword)?.let { return resolveStatus(it) }
+        // 1. 원본 keyword로 빠른 조회 (alias로 등록된 경우 hit)
+        ingredientRepository.findByKeyword(keyword)?.let {
+            return resolveStatus(it)
+        }
 
-        // 2. 없음 → keyword 단위 락 획득
-        val lock = keywordLocks.computeIfAbsent(keyword) { ReentrantLock() }
-        lock.lock()
-        try {
-            // 3. double-check (락 대기 중 다른 스레드가 이미 저장했을 수 있음)
-            ingredientRepository.findByKeyword(keyword)?.let { return resolveStatus(it) }
+        // 2. AI 유효성 검증 + 정규화 (DB write 없음)
+        //    "브로컬리" → "브로콜리" 처럼 오타·비표준 표기를 표준명으로 교정
+        val normalized = ingredientAiService.validateAndNormalize(keyword)
 
-            // 4. 식재료 유효성 검증 (동기, InvalidIngredientException 시 422 반환)
-            ingredientAiService.validate(keyword)
+        // 3. 정규명으로 재조회 (다른 표기가 이미 저장된 경우 hit)
+        if (normalized != keyword) {
+            ingredientRepository.findByKeyword(normalized)?.let {
+                return resolveStatus(it)
+            }
+        }
 
-            // 5. PENDING 선점 저장 (별도 트랜잭션으로 즉시 커밋)
-            val pending = ingredientAiSaver.savePending(keyword)
-
-            // 6. AI 비동기 호출 (PENDING 커밋 이후)
-            ingredientAiService.generateAndSave(pending.id, keyword)
-
-            return IngredientStatusResponse.pending(pending.id)
-        } finally {
-            lock.unlock()
+        // 4. PENDING 선점 저장 시도 (name unique 제약으로 동시 중복 삽입 차단)
+        return try {
+            val pending = ingredientAiSaver.savePending(normalized)
+            ingredientAiService.generateAndSave(pending.id, normalized)
+            IngredientStatusResponse.pending(pending.id)
+        } catch (e: DataIntegrityViolationException) {
+            // 동시 요청으로 다른 스레드가 먼저 삽입한 경우 → 기존 row 반환
+            val existing = ingredientRepository.findByKeyword(normalized)
+                ?: throw IllegalStateException("중복 저장 감지 후 재조회 실패: keyword=$normalized")
+            resolveStatus(existing)
         }
     }
 
