@@ -47,6 +47,7 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
+                    .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                     .requestMatchers("/api/v1/ingredients/**").permitAll()
                     .requestMatchers("/api/v1/auth/logout").permitAll()
                     .requestMatchers("/api/v1/auth/toss/login").permitAll()
