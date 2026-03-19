@@ -4,6 +4,7 @@ import com.fridgebuddy.fridge_buddy_server.auth.toss.dto.TossTokenApiResponse
 import com.fridgebuddy.fridge_buddy_server.auth.toss.dto.TossTokenResponse
 import com.fridgebuddy.fridge_buddy_server.auth.toss.dto.TossUserInfoApiResponse
 import com.fridgebuddy.fridge_buddy_server.auth.toss.dto.TossUserInfoResponse
+import com.fridgebuddy.fridge_buddy_server.common.exception.TossApiException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Component
@@ -75,27 +76,31 @@ class TossPartnerApiClient(
      * authorizationCode → AccessToken 교환
      * POST /api-partner/v1/apps-in-toss/user/oauth2/generate-token
      */
-    fun generateToken(authorizationCode: String, referrer: String): TossTokenResponse =
-        client.post()
+    fun generateToken(authorizationCode: String, referrer: String): TossTokenResponse {
+        val response = client.post()
             .uri("/api-partner/v1/apps-in-toss/user/oauth2/generate-token")
             .body(mapOf("authorizationCode" to authorizationCode, "referrer" to referrer))
             .retrieve()
             .body(TossTokenApiResponse::class.java)
-            ?.success
             ?: error("토스 generate-token 응답이 비어있습니다.")
+        return response.success
+            ?: throw TossApiException("토스 generate-token 실패: [${response.error?.code}] ${response.error?.message}")
+    }
 
     /**
      * AccessToken → 사용자 정보 조회
      * GET /api-partner/v1/apps-in-toss/user/oauth2/login-me
      */
-    fun getLoginMe(accessToken: String): TossUserInfoResponse =
-        client.get()
+    fun getLoginMe(accessToken: String): TossUserInfoResponse {
+        val response = client.get()
             .uri("/api-partner/v1/apps-in-toss/user/oauth2/login-me")
             .header("Authorization", "Bearer $accessToken")
             .retrieve()
             .body(TossUserInfoApiResponse::class.java)
-            ?.success
             ?: error("토스 login-me 응답이 비어있습니다.")
+        return response.success
+            ?: throw TossApiException("토스 login-me 실패: [${response.error?.code}] ${response.error?.message}")
+    }
 
     /**
      * userKey에 연결된 모든 AccessToken 무효화

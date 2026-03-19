@@ -35,6 +35,11 @@ class GlobalExceptionHandler {
     fun handleDuplicate(e: DuplicateFridgeItemException) =
         ApiResponse.error(e.message ?: "이미 등록된 항목입니다.")
 
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(TossApiException::class)
+    fun handleTossApiError(e: TossApiException) =
+        ApiResponse.error(e.message ?: "토스 인증에 실패했습니다.")
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoSuchElementException::class)
     fun handleNotFound(e: NoSuchElementException) =

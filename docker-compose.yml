@@ -18,7 +18,8 @@ services:
       retries: 5
 
   app:
-    build: .
+    image: ghcr.io/jieunpark626/fridge-buddy-api:latest
+    # build: .
     container_name: fridge-buddy-app
     restart: unless-stopped
     ports:
@@ -36,6 +37,7 @@ services:
       APPS_IN_TOSS_API_BASE_URL: ${APPS_IN_TOSS_API_BASE_URL:-https://apps-in-toss-api.toss.im}
       APPS_IN_TOSS_MTLS_CERT_PATH: ${APPS_IN_TOSS_MTLS_CERT_PATH:-}
       APPS_IN_TOSS_MTLS_KEY_PATH: ${APPS_IN_TOSS_MTLS_KEY_PATH:-}
+      TOSS_CALLBACK_AUTH_HEADER: ${TOSS_CALLBACK_AUTH_HEADER}
     volumes:
       - ../mTLS:/app/mtls:ro
     depends_on:

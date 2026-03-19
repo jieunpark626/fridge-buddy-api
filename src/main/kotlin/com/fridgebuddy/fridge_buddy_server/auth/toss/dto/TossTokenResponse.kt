@@ -13,5 +13,12 @@ data class TossTokenResponse(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TossTokenApiResponse(
     val resultType: String,
-    val success: TossTokenResponse,
+    val success: TossTokenResponse? = null,
+    val error: TossApiError? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TossApiError(
+    val code: String? = null,
+    val message: String? = null,
 )
