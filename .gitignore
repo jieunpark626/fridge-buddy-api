@@ -65,3 +65,5 @@ logs/
 coverage/
 
 docs/
+
+load-test/

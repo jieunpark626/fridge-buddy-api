@@ -3,10 +3,12 @@ package com.fridgebuddy.fridge_buddy_server.common.exception
 import com.fridgebuddy.fridge_buddy_server.common.response.ApiResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.HttpRequestMethodNotSupportedException
+import org.springframework.web.client.RestClientException
 import org.springframework.web.servlet.resource.NoResourceFoundException
 
 @RestControllerAdvice
@@ -49,6 +51,18 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(e: IllegalArgumentException) =
         ApiResponse.error(e.message ?: "잘못된 요청입니다.")
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleMessageNotReadable(e: HttpMessageNotReadableException) =
+        ApiResponse.error("요청 형식이 올바르지 않습니다.")
+
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    @ExceptionHandler(RestClientException::class)
+    fun handleRestClientError(e: RestClientException): Any {
+        log.error("외부 API 호출 실패: {}", e.message)
+        return ApiResponse.error("외부 서비스 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+    }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception::class)

@@ -10,7 +10,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 @Order(Int.MAX_VALUE)
-class ResponseLoggingFilter : OncePerRequestFilter() {
+class AccessLogFilter : OncePerRequestFilter() {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -19,8 +19,12 @@ class ResponseLoggingFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
+        val start = System.currentTimeMillis()
         filterChain.doFilter(request, response)
-        log.debug("RESPONSE: {} {} {} {}", response.status, request.method, request.requestURI,
-            request.remoteAddr?.let { "client=$it" } ?: "")
+        val elapsed = System.currentTimeMillis() - start
+
+        if (request.requestURI.startsWith("/actuator")) return
+
+        log.info("{} {} {} {}ms", request.method, request.requestURI, response.status, elapsed)
     }
 }
