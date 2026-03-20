@@ -5,6 +5,7 @@ import com.fridgebuddy.fridge_buddy_server.fridge.repository.FridgeItemRepositor
 import com.fridgebuddy.fridge_buddy_server.user.domain.SocialProvider
 import com.fridgebuddy.fridge_buddy_server.user.domain.User
 import com.fridgebuddy.fridge_buddy_server.user.repository.UserRepository
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -15,6 +16,8 @@ class TossLoginService(
     private val fridgeItemRepository: FridgeItemRepository,
     private val jwtProvider: JwtProvider,
 ) {
+    private val log = LoggerFactory.getLogger(javaClass)
+
     /**
      * authorizationCode + referrer를 받아 토스 API 교환 → 내부 JWT 발급
      */
@@ -35,6 +38,7 @@ class TossLoginService(
         val user = userRepository.findById(userId).orElse(null) ?: return
         val userKey = user.providerId.toLongOrNull() ?: return
         runCatching { tossPartnerApiClient.removeByUserKey(userKey) }
+            .onFailure { log.warn("Toss 토큰 무효화 실패: userKey=$userKey", it) }
     }
 
     @Transactional

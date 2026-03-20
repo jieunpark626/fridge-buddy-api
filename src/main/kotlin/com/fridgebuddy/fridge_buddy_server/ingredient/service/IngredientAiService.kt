@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
+import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClient
 import java.util.Optional
 import java.util.concurrent.TimeUnit
@@ -41,7 +42,6 @@ class IngredientAiService(
      */
     fun validateAndNormalize(keyword: String): String {
         val result = normalizeCache.get(keyword) { kw ->
-            log.debug("[normalize] AI 호출: keyword={}", kw)
             val request = mapOf(
                 "model" to "claude-haiku-4-5-20251001",
                 "max_tokens" to 100,
@@ -50,8 +50,9 @@ class IngredientAiService(
                 ),
             )
             val response = callApi(request)
-            val json = stripCodeFence(response.content.first().text)
-            val node = objectMapper.readTree(json)
+            val text = response.content.firstOrNull()?.text
+                ?: throw IllegalStateException("Claude API 응답 content가 비어있습니다.")
+            val node = objectMapper.readTree(stripCodeFence(text))
 
             if (node.path("valid").asBoolean(true)) {
                 Optional.of(node.path("canonical").asText(kw).trim().ifBlank { kw })
@@ -60,7 +61,6 @@ class IngredientAiService(
             }
         } ?: error("normalizeCache loader returned null for keyword=$keyword")
 
-        log.debug("[normalize] 결과: keyword={}, valid={}", keyword, result.isPresent)
         return result.orElseThrow { InvalidIngredientException("식재료로 적합하지 않습니다.") }
     }
 
@@ -70,11 +70,9 @@ class IngredientAiService(
      */
     @Async("aiTaskExecutor")
     fun generateAndSave(ingredientId: Long, keyword: String) {
-        log.info("AI 재료 생성 시작: keyword=$keyword, id=$ingredientId")
         try {
             val aiData = callClaude(keyword)
             ingredientAiSaver.save(ingredientId, aiData, keyword)
-            log.info("AI 재료 생성 완료: keyword=$keyword → name=${aiData.name}")
         } catch (e: Exception) {
             log.error("AI 재료 생성 실패: keyword=$keyword, id=$ingredientId", e)
             ingredientAiSaver.markFailed(ingredientId)
@@ -91,20 +89,26 @@ class IngredientAiService(
         )
 
         val response = callApi(request)
-        val json = stripCodeFence(response.content.first().text)
-        return objectMapper.readValue(json, IngredientAiDto::class.java)
+        val text = response.content.firstOrNull()?.text
+            ?: throw IllegalStateException("Claude API 응답 content가 비어있습니다.")
+        return objectMapper.readValue(stripCodeFence(text), IngredientAiDto::class.java)
     }
 
     private fun callApi(request: Map<String, Any>): ClaudeApiResponse {
-        return restClient.post()
-            .uri("https://api.anthropic.com/v1/messages")
-            .header("x-api-key", apiKey)
-            .header("anthropic-version", "2023-06-01")
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(request)
-            .retrieve()
-            .body(ClaudeApiResponse::class.java)
-            ?: throw IllegalStateException("Claude API 응답이 비어있습니다.")
+        try {
+            return restClient.post()
+                .uri("https://api.anthropic.com/v1/messages")
+                .header("x-api-key", apiKey)
+                .header("anthropic-version", "2023-06-01")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .retrieve()
+                .body(ClaudeApiResponse::class.java)
+                ?: throw IllegalStateException("Claude API 응답이 비어있습니다.")
+        } catch (e: RestClientException) {
+            log.error("Claude API 호출 실패: {}", e.message)
+            throw e
+        }
     }
 
     private fun stripCodeFence(raw: String): String = raw.trim()

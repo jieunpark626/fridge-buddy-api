@@ -35,7 +35,6 @@ class IngredientAiSaver(
                 pendingSince = LocalDateTime.now(),
             )
         )
-        log.info("[AiSaver] PENDING 저장: keyword={}, id={}", keyword, ingredient.id)
         return ingredient
     }
 
@@ -44,8 +43,6 @@ class IngredientAiSaver(
     fun save(ingredientId: Long, aiData: IngredientAiDto, keyword: String) {
         val ingredient = ingredientRepository.findById(ingredientId)
             .orElseThrow { IllegalStateException("PENDING 재료를 찾을 수 없습니다. id=$ingredientId") }
-
-        log.info("[AiSaver] save 시작: id={}, 기존 name={}, AI 정규명={}", ingredientId, ingredient.name, aiData.name)
 
         // 정규명 및 모든 필드 업데이트
         ingredient.name = aiData.name
@@ -75,12 +72,9 @@ class IngredientAiSaver(
             .filter { it.isNotBlank() && it != aiData.name }
             .filter { !ingredientAliasRepository.existsByAliasIgnoreCase(it) }
             .distinct()
-        log.info("[AiSaver] alias 저장: id={}, aliases={}", ingredientId, aliases)
         ingredientAliasRepository.saveAll(
             aliases.map { IngredientAlias(ingredient = ingredient, alias = it) }
         )
-
-        log.info("[AiSaver] COMPLETED 저장 완료: id={}, name={}", ingredientId, aiData.name)
     }
 
     /** AI 호출 실패 시 FAILED 업데이트 (save 트랜잭션과 별도로 커밋) */
@@ -93,7 +87,6 @@ class IngredientAiSaver(
     /** FAILED 재료를 PENDING으로 리셋하여 재시도 허용 */
     @Transactional
     fun resetToPending(ingredientId: Long) {
-        log.info("[AiSaver] PENDING 리셋: id={}", ingredientId)
         ingredientRepository.updateStatus(ingredientId, IngredientStatus.PENDING, LocalDateTime.now())
     }
 }

@@ -81,7 +81,9 @@ class IngredientService(
     fun getById(id: Long): IngredientDetailResponse {
         val ingredient = ingredientRepository.findById(id)
             .orElseThrow { NoSuchElementException("식재료를 찾을 수 없습니다. id=$id") }
-        check(ingredient.status == IngredientStatus.COMPLETED) { "아직 처리 중인 재료입니다." }
+        if (ingredient.status != IngredientStatus.COMPLETED) {
+            throw IllegalArgumentException("아직 처리 중인 재료입니다. status=${ingredient.status}")
+        }
         return buildDetail(ingredient)
     }
 
