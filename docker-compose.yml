@@ -38,6 +38,7 @@ services:
       APPS_IN_TOSS_MTLS_CERT_PATH: ${APPS_IN_TOSS_MTLS_CERT_PATH:-}
       APPS_IN_TOSS_MTLS_KEY_PATH: ${APPS_IN_TOSS_MTLS_KEY_PATH:-}
       TOSS_CALLBACK_AUTH_HEADER: ${TOSS_CALLBACK_AUTH_HEADER}
+      TZ: Asia/Seoul
     volumes:
       - ../mTLS:/app/mtls:ro
     depends_on:
